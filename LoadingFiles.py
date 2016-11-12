@@ -5,6 +5,8 @@ Created on Sun Nov  6 14:34:35 2016
 
 @author: talsimon
 """
+#test
+
 import os  
 import numpy as np  
 import pandas as pd  
