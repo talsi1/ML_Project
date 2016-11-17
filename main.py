@@ -37,8 +37,8 @@ def featuresExtraction (movement_class, path, feature_num):
         list_[i, 0:6] = temp.mean().reshape(1,6)
         list_[i, 6:12] = temp.std().reshape(1,6)
         list_[i, 12:18] = temp.median().reshape(1,6)
-        #list_[i, 18:19] = np.fft.fftn(temp).max()
-        #list_[i, 19:20] = np.fft.fftn(temp).min()
+        list_[i, 18:19] = np.fft.fftn(temp).max()
+        list_[i, 19:20] = np.fft.fftn(temp).min()
         #list_[i, 20:26] = sp.stats.skew(np.fft.fftn(temp)).reshape(1,6)
         #list_[i, 26:32] = sp.stats.kurtosis(np.fft.fftn(temp)).reshape(1,6)
         #list_[i, 33] = sp.stats.iqr(temp)
@@ -48,11 +48,12 @@ def featuresExtraction (movement_class, path, feature_num):
     return list_
 
 ###############################################################
-feature_num = 19
+feature_num = 20
 
 X_squat = pd.DataFrame(featuresExtraction(0, r'/Users/talsimon/Desktop/Machine Learning/Squat', feature_num))  
 X_sp = pd.DataFrame(featuresExtraction(1, r'/Users/talsimon/Desktop/Machine Learning/SP', feature_num))
 X_dl = pd.DataFrame(featuresExtraction(2, r'/Users/talsimon/Desktop/Machine Learning/Deadlift', feature_num))
+
 
 X = pd.DataFrame()       
 X = X.append(X_squat)
@@ -95,5 +96,20 @@ for C in C_values:
             best_score = score
             best_params['C'] = C
             best_params['gamma'] = gamma
+
+###########################ploting#############################
+squat = raw_data_x[raw_data_x[19].isin([0])]  
+sp = raw_data_x[raw_data_x[19].isin([1])]
+dl = raw_data_x[raw_data_x[19].isin([2])]
+
+        
+fig, ax = plt.subplots(figsize=(12,8))  
+ax.scatter(squat[17], squat[18], s=50, c='b', marker='o')  
+ax.scatter(sp[17], sp[18], s=50, c='r', marker='x')
+ax.scatter(dl[18], dl[18], s=50, c='y', marker='s')
+ax.legend()  
+ax.set_xlabel('fft max')  
+ax.set_ylabel('fft min')  
+###############################################################
 
 
