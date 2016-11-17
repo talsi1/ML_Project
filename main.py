@@ -11,46 +11,21 @@ import os
 import numpy as np  
 import pandas as pd  
 import matplotlib.pyplot as plt  
-from scipy.io import loadmat  
 import glob
 import sys
 from sklearn.datasets import load_iris
 from sklearn import preprocessing
+import scipy as sp
+from scipy import signal
+from scipy import stats
+from sklearn import svm  
 
-class Movement(object):
-    
-    def name(self):
-        self.name
-
-    def class_number(self):
-        self.class_number
-    
-    def directory(self):
-        self.directory
-        
-M0 = Movement()
-M0.name='squat'
-M0.class_number=0
-M0.directory=r'/Users/talsimon/Desktop/Machine Learning/Squat' 
-
-M1 = Movement()
-M1.name='shoulder press'
-M1.class_number=1
-M1.directory=r'/Users/talsimon/Desktop/Machine Learning/SP' 
-
-M2 = Movement()
-M2.name='dead lift'
-M2.class_number=2
-M2.directory=r'/Users/talsimon/Desktop/Machine Learning/Deadlift' 
-   
-feature_num = 19   
-movement_num = 3
 
 #######################Feature Extraction Process###############
 
 
-def featuresExtraction (feature_num, movement_class, path):
-
+def featuresExtraction (movement_class, path):
+    feature_num = 34
     allFiles = glob.glob(path + "/*")
     list_ = np.zeros((len(allFiles), feature_num))
     i = 0
@@ -63,14 +38,66 @@ def featuresExtraction (feature_num, movement_class, path):
         list_[i, 0:6] = temp.mean().reshape(1,6)
         list_[i, 6:12] = temp.std().reshape(1,6)
         list_[i, 12:18] = temp.median().reshape(1,6)
+        list_[i, 18:19] = np.fft.fftn(temp).max()
+        list_[i, 19:20] = np.fft.fftn(temp).min()
+        list_[i, 20:26] = sp.stats.skew(np.fft.fftn(temp)).reshape(1,6)
+        list_[i, 26:32] = sp.stats.kurtosis(np.fft.fftn(temp)).reshape(1,6)
+        list_[i, 33] = sp.stats.iqr(temp)
         list_[i, feature_num - 1] = movement_class
         i = i + 1    
-    np.savetxt('SquatProcessed', list_,delimiter=',')
-    return [path]
+
+    return list_
 
 ###############################################################
 
-j=0
-for j in movement_num: 
-    featuresExtraction(j,j,r'/Users/dorsimon/ML_Project/Data Set/Squat')  
-    j=j+1
+
+X_squat = pd.DataFrame(featuresExtraction(0, r'/Users/talsimon/Desktop/Machine Learning/Squat'))  
+X_sp = pd.DataFrame(featuresExtraction(1, r'/Users/talsimon/Desktop/Machine Learning/SP'))
+X_dl = pd.DataFrame(featuresExtraction(2, r'/Users/talsimon/Desktop/Machine Learning/Deadlift'))
+
+X = pd.DataFrame()       
+X = X.append(X_squat)
+X = X.append(X_sp)
+X = X.append(X_dl)
+
+X = np.matrix(X.values)
+np.random.shuffle(X)
+
+raw_y = pd.DataFrame(X)
+raw_y = raw_y.drop(raw_y.columns[:33], axis=1)
+
+#y = np.matrix(y.values)
+
+raw_data_x = pd.DataFrame(X)
+raw_data_x = raw_data_x.drop(raw_data_x.columns[33], axis=1)
+#raw_data_y = pd.DataFrame(y)
+
+# append a ones column to the front of the data set
+raw_data_x.insert(0, 'Ones', 1)
+
+# set X (training data) and y (target variable)
+cols = raw_data_x.shape[1]  
+X = raw_data_x.iloc[:200,0:cols-1]  
+y = raw_y.iloc[:200,0]
+Xval = raw_data_x.iloc[200:290,0:cols-1]
+yval = raw_y.iloc[200:290,0]
+
+
+C_values = [0.01, 0.03, 0.1, 0.3, 1, 3, 10, 30, 100]  
+gamma_values = [0.01, 0.03, 0.1, 0.3, 1, 3, 10, 30, 100]
+
+best_score = 0  
+best_params = {'C': None, 'gamma': None}
+
+for C in C_values:  
+    for gamma in gamma_values:
+        svc = svm.SVC(C=C, gamma=gamma)
+        svc.fit(X, y)
+        score = svc.score(Xval, yval)
+
+        if score > best_score:
+            best_score = score
+            best_params['C'] = C
+            best_params['gamma'] = gamma
+
+

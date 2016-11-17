@@ -114,9 +114,9 @@ X = X.append(dl)
 X = np.matrix(X.values)
 np.random.shuffle(X)
 
-#y = pd.DataFrame(X)
-#y = y.drop(y.columns[:feature_num - 1], axis=1)
-#y = np.matrix(y.values)
+y = pd.DataFrame(X)
+y = y.drop(y.columns[:feature_num - 1], axis=1)
+y = np.matrix(y.values)
 
 np.savetxt('data_set_full', X,delimiter=',')
 
