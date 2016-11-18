@@ -106,7 +106,7 @@ dl = raw_data_x[raw_data_x[19].isin([2])]
 fig, ax = plt.subplots(figsize=(12,8))  
 ax.scatter(squat[17], squat[18], s=50, c='b', marker='o')  
 ax.scatter(sp[17], sp[18], s=50, c='r', marker='x')
-ax.scatter(dl[18], dl[18], s=50, c='y', marker='s')
+ax.scatter(dl[17], dl[18], s=50, c='y', marker='s')
 ax.legend()  
 ax.set_xlabel('fft max')  
 ax.set_ylabel('fft min')  
