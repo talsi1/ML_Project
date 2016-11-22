@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+  <title>Positioning</title>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+    }
+
+    body {
+      background: black;
+      font-family: 'Open Sans', sans-serif;
+      color: white;
+    }
+
+    h1 {
+      text-align: center;
+      font-weight: 300;
+      margin: 20px 0;
+    }
+
+    p {
+      text-align: center;
+    }
+
+    #dot {
+      width: 25px;
+      height: 25px;
+      border-radius: 25px;
+      background: red;
+      position: absolute;
+      display: none;
+    }
+    #start {
+      margin: 0 auto;
+      height: 40px;
+      display: block;
+    }
+  </style>
+  <script type="text/javascript" src="/libs/jquery-3.1.1.min.js"></script>
+</head>
+<body>
+<h1 style="font-size: 60px">Administrator</h1>
+<p><span id="status">Connecting...</span></p>
+<button id="start">New File</button>
+<div id="buttons"></div>
+
+<script>
+if ('requestWakeLock' in navigator) {
+  var lock = navigator.requestWakeLock('screen');
+  window.addEventListener('visibilitychange', function() {
+    if (document.hidden) {
+      lock.unlock();
+    }
+    else {
+      lock = navigator.requestWakeLock('screen');
+    }
+  });
+}
+
+var ws;
+var wsOpen = false;
+var isRunning = false;
+var deviceId = 'Admin';
+var iteration = 0;
+
+
+function connect() {
+  ws = new WebSocket('ws://' + location.hostname + ':9322');
+  ws.onopen = function() {
+    wsOpen = true;
+    document.querySelector('#status').textContent = 'Connected';
+
+    ws.send(JSON.stringify({
+      type: 'ping',
+      deviceId: deviceId
+    }));
+  };
+  ws.onclose = function() {
+    document.querySelector('#status').textContent = 'Connecting...';
+    wsOpen = false;
+    connect();
+  };
+  ws.onmessage = function (event) {
+    var data = JSON.parse(event.data);
+
+    switch(data.type){
+      case 'newConnection':
+//        console.log('newConnection', data.deviceId);
+        $('#buttons').append('<div deviceId="'+data.deviceId+'"><input type="button" value="'+data.deviceId+'" deviceId="'+data.deviceId+'"></div>');
+        break;
+      case 'closedConnection':
+//        console.log('closedConnection', data.deviceId);
+        $('#buttons div[deviceId="'+data.deviceId+'"]').remove();
+        break;
+    }
+  };
+}
+
+connect();
+
+
+$(document).ready(function(){
+
+  $(document).on('click', '#buttons input[type="button"]', function(){
+    var deviceId = $(this).attr('deviceId');
+
+    ws.send(JSON.stringify({
+      type: 'pingClient',
+      deviceId:deviceId
+    }));
+  });
+
+
+  document.querySelector('#start').onclick = function() {
+    iteration = iteration + 1;
+        ws.send(JSON.stringify({
+          type: 'createFile',
+          iteration:iteration,
+          //deviceId:deviceId
+        }));
+      };
+
+
+
+});
+
+</script>
+</body>
+</html>
