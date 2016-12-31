@@ -20,7 +20,7 @@ import scipy as sp
 from scipy import signal
 from scipy import stats
 from sklearn import svm  
-
+from pathlib import Path
 
 #######################Feature Extraction Process###############
 
@@ -48,10 +48,15 @@ def featuresExtraction (movement_class, path, feature_num):
 
     return list_
     
-def featuresExtraction2 (movement_class, path, feature_num):
+def featuresExtraction2 (movement_class, path, feature_num):    
     df = pd.read_csv(path, header=None, names=['Time Stamp', 'Gyro Alpha', 'Gyro Beta', 'Gyro Gamma', 'Accel-X', 'Accel-Y', 'Accel-Z'])
+   # print(df)
+
     df = df.drop('Time Stamp', axis=1)
+    #print(df)
     df = df.tail(85)
+    print(df)
+    #print(df.tail(10))
     list_ = np.zeros((1, feature_num))
     df = preprocessing.normalize(df)
     temp = pd.DataFrame(df)
@@ -124,15 +129,21 @@ for C in C_values:
             best_params['C'] = C
             best_params['gamma'] = gamma
 
-path = r'/Users/talsimon/ML_Project/data-gathering/raw-data/2e000709-a5bb-4979-bdda-02177bc299e20'
+path = r'/Users/talsimon/ML_Project/data-gathering/raw-data/6666b4bb-b96c-4e4b-941d-8863e19c47b50'
+#path = r'/Users/talsimon/Desktop/b7065d33-791a-46e1-9ca1-158926eb495c0.csv'
+#f = open('/Users/talsimon/ML_Project/data-gathering/raw-data/cae10218-ff6b-4de6-b977-8aa38e2e2f090')
+#f.close()
 
+    
 while True:
+
     prediction = pd.DataFrame(featuresExtraction2(0, path, feature_num))  
     prediction.insert(0, "One", 1)
     X_stream = np.matrix(prediction.iloc[:,:cols-1].values)
     print(svc.predict(X_stream))
     np.savetxt(r'/Users/talsimon/ML_Project/data-gathering/classification', svc.predict(X_stream), fmt='%i')
-    
-    time.sleep(3)
+    #np.savetxt(r'/Users/talsimon/ML_Project/data-gathering/workout_summery', svc.predict(X_stream), fmt='%i')
+
+    time.sleep(1.5)
 
     
