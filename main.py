@@ -7,12 +7,13 @@ Created on Sun Nov  6 14:34:35 2016
 """
 #test
 
-import os  
+import os as os
 import numpy as np  
 import pandas as pd  
 import matplotlib.pyplot as plt  
 import glob
 import sys
+import time
 from sklearn.datasets import load_iris
 from sklearn import preprocessing
 import scipy as sp
@@ -38,7 +39,8 @@ def featuresExtraction (movement_class, path, feature_num):
         list_[i, 6:12] = temp.std().reshape(1,6)
         list_[i, 12:18] = temp.median().reshape(1,6)
         list_[i, 18:19] = np.fft.fftn(temp).max()
-        list_[i, 19:20] = np.fft.fftn(temp).min()
+        #list_[i, 18:19] = preprocessing.normalize(list_[i, 18:19])
+        #list_[i, 19:20] = np.fft.fftn(temp).min()
         #list_[i, 20:26] = sp.stats.skew(np.fft.fftn(temp)).reshape(1,6)
         #list_[i, 26:32] = sp.stats.kurtosis(np.fft.fftn(temp)).reshape(1,6)
         #list_[i, 33] = sp.stats.iqr(temp)
@@ -46,8 +48,31 @@ def featuresExtraction (movement_class, path, feature_num):
         i = i + 1    
 
     return list_
+    
+def featuresExtraction2 (movement_class, path, feature_num):
+    df = pd.read_csv(path, header=None, names=['Time Stamp', 'Gyro Alpha', 'Gyro Beta', 'Gyro Gamma', 'Accel-X', 'Accel-Y', 'Accel-Z'])
+    df = df.drop('Time Stamp', axis=1)
+    df = df.tail(80)
+    list_ = np.zeros((1, feature_num))
+    df = preprocessing.normalize(df)
+    temp = pd.DataFrame(df)
+    
+    list_[0, 0:6] = temp.mean().reshape(1,6)
+    list_[0, 6:12] = temp.std().reshape(1,6)
+    list_[0, 12:18] = temp.median().reshape(1,6)
+    list_[0, 18:19] = np.fft.fftn(temp).max()
+    #list_[i, 18:19] = preprocessing.normalize(list_[i, 18:19])
+    #list_[i, 19:20] = np.fft.fftn(temp).min()
+    #list_[i, 20:26] = sp.stats.skew(np.fft.fftn(temp)).reshape(1,6)
+    #list_[i, 26:32] = sp.stats.kurtosis(np.fft.fftn(temp)).reshape(1,6)
+    #list_[i, 33] = sp.stats.iqr(temp)
+    list_[0, feature_num - 1] = movement_class
+
+    return list_
 
 ###############################################################
+
+    
 feature_num = 20
 
 X_squat = pd.DataFrame(featuresExtraction(0, r'/Users/talsimon/Desktop/Machine Learning/Squat', feature_num))  
@@ -65,13 +90,16 @@ np.random.shuffle(X)
 
 # append a ones column to the front of the data set
 raw_data_x = pd.DataFrame(X)
+
 raw_data_x.insert(0, 'Ones', 1)
 
 # set X (training data) and y (target variable)
-cols = raw_data_x.shape[1]  
+cols = raw_data_x.shape[1]
 
-X = np.matrix(raw_data_x.iloc[:200,:cols-1])  
-Xval = np.matrix(raw_data_x.iloc[200:290,:cols-1])
+
+X = np.matrix(raw_data_x.iloc[:200,:cols-1].values)  
+Xval = np.matrix(raw_data_x.iloc[200:290,:cols-1].values)
+
 
 y = raw_data_x.iloc[:200,cols-1:cols]
 yval = raw_data_x.iloc[200:290,cols-1:cols]
@@ -97,19 +125,14 @@ for C in C_values:
             best_params['C'] = C
             best_params['gamma'] = gamma
 
-###########################ploting#############################
-squat = raw_data_x[raw_data_x[19].isin([0])]  
-sp = raw_data_x[raw_data_x[19].isin([1])]
-dl = raw_data_x[raw_data_x[19].isin([2])]
+path = r'/Users/talsimon/Desktop/Machine Learning/stream/ed06dd1a-65e5-463f-8fdd-d1fcd13c2c6b109'
 
-        
-fig, ax = plt.subplots(figsize=(12,8))  
-ax.scatter(squat[17], squat[18], s=50, c='b', marker='o')  
-ax.scatter(sp[17], sp[18], s=50, c='r', marker='x')
-ax.scatter(dl[17], dl[18], s=50, c='y', marker='s')
-ax.legend()  
-ax.set_xlabel('fft max')  
-ax.set_ylabel('fft min')  
-###############################################################
+while True:
+    prediction = pd.DataFrame(featuresExtraction2(0, path, feature_num))  
+    prediction.insert(0, "One", 1)
+    X_stream = np.matrix(prediction.iloc[:,:cols-1].values)
+    print(svc.predict(X_stream))
+    
+    time.sleep(3)
 
-
+    
