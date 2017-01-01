@@ -100,7 +100,7 @@ var server = ws.createServer(function(conn) {
       data.accel.x,
       data.accel.y,
       data.accel.z
-    ].join(';');
+    ].join(',');
 
     if (!firstwrite[conn.deviceId]) {
       //var DID = conn.deviceId;
