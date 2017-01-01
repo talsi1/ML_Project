@@ -86,7 +86,18 @@
         connect();
       };
 
+
       ws.onmessage = function(e) {
+        var data = JSON.parse(e.data);
+
+        if (data.type === 'classification' && data.classification) {
+
+            document.querySelector('#last-event').textContent = data;
+          
+        }
+      }
+
+      /*ws.onmessage = function(e) {
         var data = e.data;
         if (typeof data === 'string') data = JSON.parse(data);
 
@@ -99,9 +110,9 @@
             .map(l=>l.map(c=>['d','w','s'][c])
                      .map(c=>'<span class="' + c + '">' + c + '</span>')
                      .join(' '))
-             .join('<br>');
+             .join('<br>');*/
 
-          document.querySelector('#last-event').textContent = new Date();
+          //document.querySelector('#last-event').textContent = new Date();
           // document.querySelector('#data').textContent = data.classification.join(' ');
         }
       };
