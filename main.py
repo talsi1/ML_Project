@@ -145,5 +145,4 @@ while True:
     #np.savetxt(r'/Users/talsimon/ML_Project/data-gathering/workout_summery', svc.predict(X_stream), fmt='%i')
 
     time.sleep(1.5)
-
     
